@@ -1,0 +1,73 @@
+---
+- hosts: all
+  vars:
+    user: "vagrant"
+    virtualenv_dir: "/home/{{ user }}/app"
+    app_dir: "/home/{{ user }}"
+    app_name: "fvaproj"
+    host: "localhost"
+  tasks:
+    - name: update apt cache
+      apt: update_cache=yes
+      become: yes
+      become_method: sudo
+
+    - name: install packages
+      apt: name={{ item }} state=present
+      with_items:
+        - mongodb
+        - nginx
+        - python-virtualenv
+        - python-dev
+        - build-essential
+      become: yes
+      become_method: sudo
+
+    - name: create dirs structure
+      shell: mkdir -p {{ item }}
+      with_items:
+        - "{{ app_dir }}/app"
+        - "{{ app_dir }}/app/src"
+        - "{{ app_dir }}/conf/uwsgi"
+        - "{{ app_dir }}/conf/nginx"
+        - "{{ app_dir }}/conf/supervisord"
+        - "{{ app_dir }}/run"
+        - "{{ app_dir }}/logs"
+
+    - name: copy code
+      copy: src=testapp/ dest=~vagrant/app/src/ owner={{ user }}
+
+    - name: check if virtualenv already exists
+      stat: path={{ virtualenv_dir }}/bin/pip
+      register: venv_dir
+
+    - name: create virtualenv
+      shell: virtualenv {{ virtualenv_dir }}
+      when: venv_dir.stat.isreg is not defined
+
+    - name: install web application dependencies
+      pip: requirements=~vagrant/app/src/requirements.txt
+           virtualenv={{ virtualenv_dir }}
+
+    - name: put templates
+      template: src={{ item.src }} dest={{ item.dest }} owner={{ user }}
+      with_items:
+        - { src: 'conf/uwsgi/uwsgi.ini', dest: '{{app_dir}}/conf/uwsgi/uwsgi.ini'}
+        - { src: 'conf/nginx/app.conf', dest: '{{app_dir}}/conf/nginx/app.conf'}
+        - { src: 'conf/nginx/vhost.conf', dest: '{{app_dir}}/conf/nginx/vhost.conf'}
+        - { src: 'conf/supervisord/supervisord.conf', dest: '{{app_dir}}/conf/supervisord/supervisord.conf'}
+
+    - name: put system templates
+      template: src={{ item.src }} dest={{ item.dest }} owner=root
+      with_items:
+        - { src: 'conf/sys/nginx/apps.conf', dest: '/etc/nginx/conf.d/apps.conf'}
+      become: yes
+      become_method: sudo
+
+    - name: restart nginx
+      action: service name=nginx state=restarted
+      become: yes
+      become_method: sudo
+
+    - name: start supervisord
+      shell: "{{virtualenv_dir}}/bin/supervisord -c {{app_dir}}/conf/supervisord/supervisord.conf"
