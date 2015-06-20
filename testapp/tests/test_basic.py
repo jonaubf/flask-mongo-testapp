@@ -109,6 +109,31 @@ class BasicsTestCase(unittest.TestCase):
                                  follow_redirects=True)
         self.assertEqual(resp.status_code, 400)
 
+    def test_add_incorrect_record_datetime(self):
+        r = {
+            'uid': '1',
+            'name': 'John Doe',
+            'date': '2015-05-14T14:36',
+            'md5checksum': 'e8c83e232b64ce94fdd0e4539ad0d44f',
+        }
+        resp = self.testapp.post('/api/',
+                                 data=json.dumps(r),
+                                 content_type='application/json',
+                                 follow_redirects=True)
+        assert 'Error. Invalid date format' in resp.data
+
+    def test_add_incorrect_record_missingfield(self):
+        r = {
+            'uid': '1',
+            'name': 'John Doe',
+            'md5checksum': 'e8c83e232b64ce94fdd0e4539ad0d44f',
+        }
+        resp = self.testapp.post('/api/',
+                                 data=json.dumps(r),
+                                 content_type='application/json',
+                                 follow_redirects=True)
+        assert 'Error. date field is missing' in resp.data
+
     def test_get_record(self):
         resp = self.testapp.get('/api/1/2015-05-12/', follow_redirects=True)
         data = json.loads(resp.data)

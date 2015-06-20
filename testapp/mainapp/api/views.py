@@ -24,7 +24,14 @@ def put_record():
             return jsonify({
                 'response': 'Error. {0} field is missing'.format(field)
             })
-    date = datetime.datetime.strptime(data.get('date'), "%Y-%m-%dT%H:%M:%S.%f")
+    try:
+        date = datetime.datetime.strptime(data.get('date'),
+                                          "%Y-%m-%dT%H:%M:%S.%f")
+    except ValueError:
+        return jsonify({
+                'response': 'Error. Invalid date format. Date should be given'
+                ' in a %%Y-%%m-%%dT%%H:%%M:%%S.%%f format'
+            })
     r = Record(
         uid=data.get('uid'),
         name=data.get('name'),
