@@ -10,7 +10,7 @@ You can add a record to database sending POST request to `http://localhost:8080/
 {"uid": "1", "name": "John Doe", "date": "2015-05-12T14:36:00.451765", "md5checksum": "e8c83e232b64ce94fdd0e4539ad0d44f"}
 ```
 
-md5checksum is a MD5 checksum for the string: `{"uid": "1", "name": "John Doe", "date": "2015-05-12T14:36:00.451765"}`, you can check it on any online resource like `http://onlinemd5.com/`
+md5checksum is a MD5 checksum for the string: `{"uid": "1", "name": "John Doe", "date": "2015-05-12T14:36:00.451765"}`, you can check it on any online resource like [http://onlinemd5.com/](http://onlinemd5.com/)
 
 You can get info about records for some UID by any single date by sending GET request to the `htpp://localhost:8080/api/<uid>/<date>/` (date format: %Y-%m-%d)
 
