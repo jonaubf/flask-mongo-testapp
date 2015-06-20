@@ -20,6 +20,7 @@
         - python-virtualenv
         - python-dev
         - build-essential
+        - supervisor
       become: yes
       become_method: sudo
 
@@ -55,12 +56,12 @@
         - { src: 'conf/uwsgi/uwsgi.ini', dest: '{{app_dir}}/conf/uwsgi/uwsgi.ini'}
         - { src: 'conf/nginx/app.conf', dest: '{{app_dir}}/conf/nginx/app.conf'}
         - { src: 'conf/nginx/vhost.conf', dest: '{{app_dir}}/conf/nginx/vhost.conf'}
-        - { src: 'conf/supervisord/supervisord.conf', dest: '{{app_dir}}/conf/supervisord/supervisord.conf'}
 
     - name: put system templates
       template: src={{ item.src }} dest={{ item.dest }} owner=root
       with_items:
         - { src: 'conf/sys/nginx/apps.conf', dest: '/etc/nginx/conf.d/apps.conf'}
+        - { src: 'conf/sys/supervisord/supervisord.conf', dest: '/etc/supervisor/conf.d/testapp.conf'}
       become: yes
       become_method: sudo
 
@@ -69,5 +70,7 @@
       become: yes
       become_method: sudo
 
-    - name: start supervisord
-      shell: "{{virtualenv_dir}}/bin/supervisord -c {{app_dir}}/conf/supervisord/supervisord.conf"
+    - name: restart supervisor
+      action: service name=supervisor state=restarted
+      become: yes
+      become_method: sudo
